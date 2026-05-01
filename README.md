@@ -2,123 +2,147 @@
 
 A compact portfolio case study demonstrating causal inference, experimentation thinking, and decision-oriented analytics on synthetic retail promotion data.
 
-## 1. Business decision
+The project shows how naive promotion analysis can be misleading when promotions are assigned non-randomly, and how causal methods can translate analysis into a business recommendation.
 
-A retailer runs promotions across stores and products. Sales often look higher during promotions, but the key business question is:
+---
+
+## Business question
+
+A retailer runs promotions across stores and products.
+
+Observed sales and profit often look higher during promotions, but the key business question is:
 
 **Should the retailer continue, stop, or target retail promotions?**
 
-The goal is not only to estimate whether promotions increase sales, but to understand whether they create **incremental net profit**.
+The goal is not only to estimate whether promotions increase sales, but whether they create **incremental net profit**.
 
-## 2. Why naive analysis is misleading
+---
 
-A simple comparison between promoted and non-promoted observations can be biased because promotions are not assigned randomly.
+## Key result
 
-Promotions are more likely to be launched for:
+Naive analysis suggests that promotions are slightly profitable.
+
+However, because promotions were assigned to stronger store-product-week observations, this comparison is biased.
+
+After adjusting for observed confounders, the average promotion effect becomes negative and close to the synthetic ground-truth benchmark.
+
+| Estimate | Value | Interpretation |
+|---|---:|---|
+| Naive promoted vs non-promoted difference | +1.81 | Promotions look slightly profitable |
+| Regression-adjusted estimate | -15.50 | Close to synthetic ground truth |
+| Propensity score weighted ATT | -22.27 | Correct direction, less stable due to overlap/weights |
+| True synthetic ATT | -14.59 | Ground-truth benchmark |
+
+**Main conclusion:** blanket promotions should not be continued based only on naive observed profit comparisons.
+
+---
+
+## Business recommendation
+
+The retailer should move from blanket promotions to targeted promotions.
+
+The strongest positive pocket in the synthetic data is:
+
+| Segment | Avg. true incremental profit | Positive share | Recommendation |
+|---|---:|---:|---|
+| High-margin / low-discount promotions | +6.27 | 55.5% | Target / continue |
+
+Recommended action:
+
+1. Stop using naive promoted vs non-promoted comparisons as the main decision rule.
+2. Limit blanket promotions, especially high-discount and low-margin promotions.
+3. Target promotions toward high-margin, low-discount contexts.
+4. Validate the targeting rule with a blocked randomized experiment.
+5. Use incremental net profit as the primary success metric.
+
+---
+
+## Why naive analysis is misleading
+
+Promotions are not assigned randomly.
+
+In this synthetic retail setting, promotions are more likely to be launched for:
 
 - high-demand stores;
 - popular products;
 - seasonal periods;
-- strategically important categories;
-- situations where managers already expect higher sales.
+- holiday weeks;
+- strategic product categories.
 
-Because of this, promoted observations may have higher sales even without the promotion.
+These same factors also increase observed sales and profit.
 
-The project demonstrates how naive uplift can overestimate the true business impact.
+As a result, promoted observations can look better even when the true incremental effect of promotion is negative.
 
-## 3. Project goal
+---
 
-This project uses synthetic retail data with known ground truth to compare:
-
-- naive promotion effect estimates;
-- causal estimates adjusted for confounding;
-- true synthetic treatment effects.
-
-The final output is a business recommendation about where promotions should continue, where they should be limited, and how a better experiment could be designed.
-
-## 4. Unit of analysis
+## Synthetic data design
 
 The unit of observation is:
 
 **store × product × week**
 
-Each row represents one product in one store during one week.
+The dataset contains:
 
-## 5. Treatment
+- 50 stores;
+- 20 products;
+- 52 weeks;
+- 52,000 rows.
 
-The treatment is:
+The synthetic data includes:
 
-**promotion_flag**
+- store characteristics;
+- product characteristics;
+- time and seasonality variables;
+- non-random promotion assignment;
+- observed sales and profit outcomes;
+- hidden synthetic ground truth.
 
-It indicates whether a product-store-week was exposed to a promotion.
+Because the data is synthetic, the true treatment effect is known. This allows the project to compare naive estimates, causal estimates, and the true synthetic benchmark.
 
-Promotion assignment is intentionally non-random to simulate realistic selection bias.
+---
 
-## 6. Primary outcome
+## Methods
 
-The primary business outcome is:
+The MVP includes:
 
-**incremental net profit**
+1. **Naive comparison**  
+   Compares promoted vs non-promoted observations.
 
-Supporting metrics include:
+2. **Regression adjustment**  
+   Estimates the effect of promotion while controlling for observed pre-treatment confounders.
 
-- units sold;
-- revenue;
-- gross profit;
-- net profit;
-- true treatment effect;
-- estimated treatment effect.
+3. **Propensity score weighting**  
+   Reweights control observations to look more similar to promoted observations.
 
-## 7. MVP methods
+4. **Segment-level treatment effect analysis**  
+   Identifies where promotions may still create positive incremental profit.
 
-The first version of the project includes:
+5. **Decision memo**  
+   Translates the analysis into a business recommendation.
 
-1. Naive promoted vs non-promoted comparison
-2. Regression adjustment
-3. Propensity score weighting
-4. Segment-level treatment effect analysis
-5. Decision memo with business recommendation
+---
 
-## 8. Expected final recommendation
+## Project structure
 
-The final recommendation will answer:
-
-- where promotions create incremental profit;
-- where promotions mostly subsidize existing demand;
-- which product-store segments should be targeted;
-- what kind of randomized experiment should be run next.
-
-## 9. Scope
-
-This is a compact portfolio case study, not a production ML system.
-
-Included:
-
-- synthetic data generation;
-- causal assumptions;
-- baseline analysis;
-- causal effect estimation;
-- business interpretation;
-- decision memo.
-
-Not included in v1:
-
-- production ML pipeline;
-- real customer data;
-- large dashboard;
-- MLflow / Airflow / feature store;
-- causal forests / Double ML / bandits;
-- full retail demand simulation.
-
-## 10. AI-augmented workflow
-
-AI is used as an analytical assistant for:
-
-- ideation;
-- code drafting;
-- documentation;
-- assumption stress-testing;
-- review;
-- portfolio packaging.
-
-Final causal assumptions, method selection, interpretation, and business recommendations are owned by the analyst.
+```text
+decision-science-lab/
+│
+├── README.md
+├── requirements.txt
+│
+├── data/
+│   └── retail_promotions_synthetic.csv
+│
+├── notebooks/
+│   └── decision_science_lab_case_study.ipynb
+│
+├── reports/
+│   ├── decision_memo.md
+│   └── figures/
+│
+├── docs/
+│   ├── causal_assumptions.md
+│   └── data_dictionary.md
+│
+└── src/
+    └── generate_synthetic_data.py
