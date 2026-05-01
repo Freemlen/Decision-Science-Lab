@@ -14,7 +14,7 @@ Naive analysis suggests that promotions are slightly profitable because promoted
 
 However, this comparison is biased. Promotions were assigned non-randomly to stronger store-product-week observations: high-demand stores, popular products, seasonal periods, holidays, and strategic categories.
 
-After adjusting for observed confounders, the estimated average effect of promotions becomes negative and close to the synthetic ground-truth benchmark.
+After adjusting for observed confounders, the estimated ATT-like effect of promotions among promoted rows becomes negative and close to the synthetic ground-truth benchmark.
 
 The recommendation is to stop relying on blanket promotions and move toward targeted promotions in selected high-margin, low-discount contexts.
 
@@ -27,7 +27,7 @@ The recommendation is to stop relying on blanket promotions and move toward targ
 | Naive estimate | +1.81 | Promotions look slightly profitable |
 | Regression-adjusted estimate | -15.50 | Adjusted estimate is close to synthetic truth |
 | Propensity score weighted ATT | -22.27 | Corrects direction but is less stable |
-| True synthetic ATT | -14.59 | Ground-truth benchmark in synthetic data |
+| True synthetic ATT among promoted rows | -14.59 | Ground-truth benchmark in synthetic data |
 
 The naive estimate has the wrong sign because promoted observations were already stronger before promotion assignment.
 
@@ -56,6 +56,8 @@ Regression adjustment controls for observed pre-treatment confounders and recove
 Propensity score weighting supports the same qualitative conclusion: the average promotion effect is negative. However, the weighted estimate is more extreme because of imperfect overlap and weight instability.
 
 The effective weighted control sample size is much smaller than the raw control group, so the propensity score estimate should be interpreted with caution.
+
+It is less reliable in magnitude because the weighted control group has low effective sample size and residual imbalance on key demand drivers.
 
 ---
 

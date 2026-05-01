@@ -70,9 +70,11 @@ Each row represents one product sold in one store during one week.
 | gross_profit | Revenue after product margin |
 | promo_cost | Cost of running the promotion |
 | net_profit | Gross profit minus promotion cost |
-| treatment_effect_true | True synthetic causal effect |
-| incremental_units_true | True incremental units caused by promotion |
-| incremental_profit_true | True incremental profit caused by promotion |
+| treatment_effect_true | Synthetic benchmark causal effect for promoted rows; zero for non-promoted rows |
+| incremental_units_true | Synthetic benchmark incremental units for promoted rows; zero for non-promoted rows |
+| incremental_profit_true | Synthetic benchmark incremental profit for promoted rows; zero for non-promoted rows |
+
+The three `_true` columns are synthetic benchmark columns. They are not available in real business data and must not be used as model features.
 
 ---
 

@@ -14,18 +14,25 @@ The treatment is:
 
 It indicates whether a given store-product-week was exposed to a promotion.
 
-## Outcome
+## Outcome and estimand
 
-The primary outcome is:
+The observed outcome is:
 
-**incremental net profit**
+**net_profit**
+
+This is the observed gross profit after promotion cost.
+
+The causal estimand is:
+
+**ATT-like incremental effect of promotion on net_profit among promoted rows**
+
+Incremental net profit is a causal contrast between observed promoted profit and the counterfactual profit that would have occurred without promotion. It is not directly observed in real business data.
 
 Supporting outcomes:
 
 - units sold
 - revenue
 - gross profit
-- net profit
 
 ## Why naive analysis is biased
 
@@ -69,14 +76,14 @@ This means that after controlling for these variables, promoted and non-promoted
 
 ## Synthetic ground truth
 
-Because the dataset is synthetic, the true treatment effect is known.
+Because the dataset is synthetic, the true synthetic ATT among promoted rows is known.
 
 This allows the project to compare:
 
 - naive effect estimate;
 - regression-adjusted estimate;
 - propensity score weighted estimate;
-- true synthetic treatment effect.
+- true synthetic ATT among promoted rows.
 
 ## Main limitation
 

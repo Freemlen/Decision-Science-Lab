@@ -24,14 +24,14 @@ Naive analysis suggests that promotions are slightly profitable.
 
 However, because promotions were assigned to stronger store-product-week observations, this comparison is biased.
 
-After adjusting for observed confounders, the average promotion effect becomes negative and close to the synthetic ground-truth benchmark.
+After adjusting for observed confounders, the ATT-like effect among promoted rows becomes negative and close to the synthetic ground-truth benchmark.
 
 | Estimate | Value | Interpretation |
 |---|---:|---|
 | Naive promoted vs non-promoted difference | +1.81 | Promotions look slightly profitable |
-| Regression-adjusted estimate | -15.50 | Close to synthetic ground truth |
+| Regression-adjusted estimate | -15.50 | Close to true synthetic ATT among promoted rows |
 | Propensity score weighted ATT | -22.27 | Correct direction, less stable due to overlap/weights |
-| True synthetic ATT | -14.59 | Ground-truth benchmark |
+| True synthetic ATT among promoted rows | -14.59 | Ground-truth benchmark |
 
 **Main conclusion:** blanket promotions should not be continued based only on naive observed profit comparisons.
 
@@ -54,6 +54,16 @@ Recommended action:
 3. Target promotions toward high-margin, low-discount contexts.
 4. Validate the targeting rule with a blocked randomized experiment.
 5. Use incremental net profit as the primary success metric.
+
+---
+
+## How to read this project
+
+1. Read `README.md` for the overview.
+2. Open `notebooks/decision_science_lab_case_study.ipynb` for the full analysis.
+3. Read `reports/decision_memo.md` for the business recommendation.
+4. Read `docs/causal_assumptions.md` for the causal assumptions.
+5. Read `docs/data_dictionary.md` for variable definitions.
 
 ---
 
@@ -97,7 +107,7 @@ The synthetic data includes:
 - observed sales and profit outcomes;
 - hidden synthetic ground truth.
 
-Because the data is synthetic, the true treatment effect is known. This allows the project to compare naive estimates, causal estimates, and the true synthetic benchmark.
+Because the data is synthetic, the true synthetic ATT among promoted rows is known. This allows the project to compare naive estimates, causal estimates, and the synthetic benchmark.
 
 ---
 
@@ -109,10 +119,10 @@ The MVP includes:
    Compares promoted vs non-promoted observations.
 
 2. **Regression adjustment**  
-   Estimates the effect of promotion while controlling for observed pre-treatment confounders.
+   Estimates the ATT-like effect of promotion while controlling for observed pre-treatment confounders.
 
 3. **Propensity score weighting**  
-   Reweights control observations to look more similar to promoted observations.
+   Reweights control observations to look more similar to promoted observations for an ATT-style comparison.
 
 4. **Segment-level treatment effect analysis**  
    Identifies where promotions may still create positive incremental profit.
@@ -146,3 +156,16 @@ decision-science-lab/
 │
 └── src/
     └── generate_synthetic_data.py
+```
+
+---
+
+## Run locally
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python src/generate_synthetic_data.py
+jupyter notebook notebooks/decision_science_lab_case_study.ipynb
+```
