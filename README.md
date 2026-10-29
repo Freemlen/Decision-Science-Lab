@@ -1,171 +1,100 @@
-# Decision Science Lab: Causal Analytics for Retail Promotions
+# Decision Science Lab — Causal Analytics for Retail Promotions
 
-A compact portfolio case study demonstrating causal inference, experimentation thinking, and decision-oriented analytics on synthetic retail promotion data.
+**Independent portfolio case study · Python · Applied statistics · Causal measurement · Synthetic data only**
 
-The project shows how naive promotion analysis can be misleading when promotions are assigned non-randomly, and how causal methods can translate analysis into a business recommendation.
+> **The decision problem:** Are promotions *incrementally* profitable, or do promoted store–product–week observations simply look better because they were selected differently?
+>
+> **One-minute finding:** In this synthetic case, a naive comparison is **+1.81** per store–product–week observation, while the known synthetic treatment effect among promoted observations is **−14.59**. Regression adjustment gives **−15.50**; propensity-score weighting gives **−22.27**, with overlap and weighting limitations. The takeaway is about **measurement design**, not a proven impact in a real retailer.
 
----
+![Naive, adjusted and synthetic benchmark effects](reports/figures/causal_estimate_comparison.png)
 
-## Business question
+### Read the case in 60 seconds
 
-A retailer runs promotions across stores and products.
+| Start here | What you'll find |
+|---|---|
+| **[Decision memo](reports/decision_memo.md)** | The business question, findings, proposed decision, and next experiment |
+| **[Executed Jupyter case study](notebooks/decision_science_lab_case_study.ipynb)** | Data checks, estimation, diagnostics, segmentation and plots |
+| **[Causal assumptions](docs/causal_assumptions.md)** | Treatment, outcome, confounders, identification assumptions and limitations |
+| **[Data dictionary](docs/data_dictionary.md)** | Field definitions and identification of synthetic ground-truth columns |
+| **[Synthetic data generator](src/generate_synthetic_data.py)** | Reproducible data-generating process and selection bias by construction |
 
-Observed sales and profit often look higher during promotions, but the key business question is:
+## Business context
 
-**Should the retailer continue, stop, or target retail promotions?**
+A fictional retailer runs promotions across stores and products. Management sees that promoted rows often have higher observed profit, but needs an answer to a different question:
 
-The goal is not only to estimate whether promotions increase sales, but whether they create **incremental net profit**.
+**Should promotions continue broadly, stop, or be tested more selectively?**
 
----
+The estimand examined is the **ATT-like incremental effect of promotions on net profit among promoted rows**, not the raw difference between promoted and non-promoted observations. In this example, promotions are preferentially assigned to stores, products and periods with stronger expected demand. That selection mechanism can make an unadjusted comparison misleading.
 
-## Key result
+## Results and interpretation
 
-Naive analysis suggests that promotions are slightly profitable.
-
-However, because promotions were assigned to stronger store-product-week observations, this comparison is biased.
-
-After adjusting for observed confounders, the ATT-like effect among promoted rows becomes negative and close to the synthetic ground-truth benchmark.
-
-| Estimate | Value | Interpretation |
+| Comparison | Result | What it shows |
 |---|---:|---|
-| Naive promoted vs non-promoted difference | +1.81 | Promotions look slightly profitable |
-| Regression-adjusted estimate | -15.50 | Close to true synthetic ATT among promoted rows |
-| Propensity score weighted ATT | -22.27 | Correct direction, less stable due to overlap/weights |
-| True synthetic ATT among promoted rows | -14.59 | Ground-truth benchmark |
+| Naive promoted vs non-promoted | **+1.81** | An apparently positive association, **not** a causal effect |
+| Regression-adjusted estimate | **−15.50** | Close to the synthetic benchmark under the modeled covariates |
+| Propensity-score weighted ATT estimate | **−22.27** | Same qualitative direction, but affected by limited overlap and weight instability |
+| Known synthetic ATT among promoted rows | **−14.59** | A benchmark available only because the data were generated |
 
-**Main conclusion:** blanket promotions should not be continued based only on naive observed profit comparisons.
+*Values are per synthetic store–product–week observation in the case study's modeled monetary units; they are not measured business results.*
 
----
+The main lesson is not that a particular real-world promotion is unprofitable. It is that **apparently profitable treated observations can coexist with a negative incremental treatment effect** when treatment is assigned non-randomly.
 
-## Business recommendation
+## What I built
 
-The retailer should move from blanket promotions to targeted promotions.
+- A reproducible synthetic retail panel with **50 stores × 20 products × 52 weeks = 52,000 observations**.
+- A non-random promotion-assignment mechanism and known synthetic effect benchmark.
+- An exploratory analysis comparing naive estimates, regression adjustment and ATT-style propensity-score weighting.
+- Diagnostics covering propensity-score overlap, covariate balance and effective weighted sample size.
+- Segment-level analysis and a concise decision memo translating analytical results into a follow-up experiment proposal.
 
-The strongest positive pocket in the synthetic data is:
+**Tools:** Python, pandas, NumPy, scikit-learn, matplotlib, Jupyter Notebook.
 
-| Segment | Avg. true incremental profit | Positive share | Recommendation |
-|---|---:|---:|---|
-| High-margin / low-discount promotions | +6.27 | 55.5% | Target / continue |
+![Covariate balance diagnostic](reports/figures/covariate_balance_before_after.png)
 
-Recommended action:
+## Decision recommendation — for this illustrative case
 
-1. Stop using naive promoted vs non-promoted comparisons as the main decision rule.
-2. Limit blanket promotions, especially high-discount and low-margin promotions.
-3. Target promotions toward high-margin, low-discount contexts.
-4. Validate the targeting rule with a blocked randomized experiment.
-5. Use incremental net profit as the primary success metric.
+The synthetic analysis suggests that blanket promotions should **not** be justified by naive observed-profit comparisons. A sensible next step for the fictional retailer is to **test** more selective promotion designs, including high-margin/low-discount contexts, in a **blocked randomized experiment** using incremental net profit as the primary outcome.
 
----
+The segment patterns use the **known synthetic ground truth**, not a validated deployable targeting model. They generate a hypothesis for an experiment; they do not establish a real-world treatment policy.
 
-## How to read this project
+See the **[decision memo](reports/decision_memo.md)** for the proposed experiment and practical constraints.
 
-1. Read `README.md` for the overview.
-2. Open `notebooks/decision_science_lab_case_study.ipynb` for the full analysis.
-3. Read `reports/decision_memo.md` for the business recommendation.
-4. Read `docs/causal_assumptions.md` for the causal assumptions.
-5. Read `docs/data_dictionary.md` for variable definitions.
+## Important limitations
 
----
+- **Entirely synthetic:** no corporate or customer data, real campaign effects, or proprietary pipelines are included.
+- **Assumptions matter:** observed-confounder adjustment is only causal under identification assumptions; in real settings, unobserved confounding, interference and measurement errors may remain.
+- **Weighted estimate is unstable:** the propensity-score approach shows imperfect overlap and reduced effective control sample size. Its magnitude should not be treated as a reliable benchmark.
+- **No validated rollout recommendation:** segment results are exploratory and rely on synthetic ground truth. The proposed targeting strategy requires a randomized test.
+- **Not a production system:** this is a portfolio demonstration of analytical thinking, not a certified econometric product or a real-company case study.
 
-## Why naive analysis is misleading
-
-Promotions are not assigned randomly.
-
-In this synthetic retail setting, promotions are more likely to be launched for:
-
-- high-demand stores;
-- popular products;
-- seasonal periods;
-- holiday weeks;
-- strategic product categories.
-
-These same factors also increase observed sales and profit.
-
-As a result, promoted observations can look better even when the true incremental effect of promotion is negative.
-
----
-
-## Synthetic data design
-
-The unit of observation is:
-
-**store × product × week**
-
-The dataset contains:
-
-- 50 stores;
-- 20 products;
-- 52 weeks;
-- 52,000 rows.
-
-The synthetic data includes:
-
-- store characteristics;
-- product characteristics;
-- time and seasonality variables;
-- non-random promotion assignment;
-- observed sales and profit outcomes;
-- hidden synthetic ground truth.
-
-Because the data is synthetic, the true synthetic ATT among promoted rows is known. This allows the project to compare naive estimates, causal estimates, and the synthetic benchmark.
-
----
-
-## Methods
-
-The MVP includes:
-
-1. **Naive comparison**  
-   Compares promoted vs non-promoted observations.
-
-2. **Regression adjustment**  
-   Estimates the ATT-like effect of promotion while controlling for observed pre-treatment confounders.
-
-3. **Propensity score weighting**  
-   Reweights control observations to look more similar to promoted observations for an ATT-style comparison.
-
-4. **Segment-level treatment effect analysis**  
-   Identifies where promotions may still create positive incremental profit.
-
-5. **Decision memo**  
-   Translates the analysis into a business recommendation.
-
----
-
-## Project structure
-
-```text
-decision-science-lab/
-│
-├── README.md
-├── requirements.txt
-│
-├── data/
-│   └── retail_promotions_synthetic.csv
-│
-├── notebooks/
-│   └── decision_science_lab_case_study.ipynb
-│
-├── reports/
-│   ├── decision_memo.md
-│   └── figures/
-│
-├── docs/
-│   ├── causal_assumptions.md
-│   └── data_dictionary.md
-│
-└── src/
-    └── generate_synthetic_data.py
-```
-
----
-
-## Run locally
+## Reproduce locally
 
 ```bash
+git clone https://github.com/Freemlen/Decision-Science-Lab.git
+cd Decision-Science-Lab
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate   # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python src/generate_synthetic_data.py
 jupyter notebook notebooks/decision_science_lab_case_study.ipynb
 ```
+
+The data generator uses a fixed default seed. The notebook contains saved analyses and visuals; regenerating or re-running the study may require an appropriate local Python/Jupyter environment.
+
+## Repository map
+
+```text
+README.md
+data/retail_promotions_synthetic.csv      # synthetic, reproducible input
+src/generate_synthetic_data.py            # data-generating mechanism
+notebooks/decision_science_lab_case_study.ipynb
+reports/decision_memo.md                  # business-facing summary
+reports/figures/                          # saved visualizations
+docs/causal_assumptions.md
+docs/data_dictionary.md
+requirements.txt
+```
+
+---
+
+**Portfolio focus:** reproducible analysis, transparent assumptions, diagnosing misleading comparisons and turning uncertain evidence into a defensible next business decision.
