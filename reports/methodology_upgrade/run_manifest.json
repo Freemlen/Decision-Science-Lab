@@ -1,0 +1,26 @@
+{
+  "seeds": [
+    42,
+    101,
+    202,
+    303,
+    404
+  ],
+  "rows_per_seed": 52000,
+  "python": "3.12.7",
+  "numpy": "2.2.6",
+  "pandas": "2.2.3",
+  "scikit_learn": "1.6.1",
+  "matplotlib": "3.10.3",
+  "scipy": "1.15.3",
+  "threadpoolctl": "3.7.0",
+  "source_hash_convention": "UTF-8 text with LF newlines on every platform",
+  "source_sha256": {
+    "src/generate_synthetic_data.py": "26ea801084fe8da1c43c2b4e41dba2e355f0be9ef51b2f272576d73f9bb5b917",
+    "src/estimation.py": "be0492f2958dce473065121f3f18e324122d14280fb9d8a8e75441e8d2c8d033",
+    "src/run_analysis.py": "ea177b40b49f996871aae3c6836150f2d521a95914361d9474d264910eb42605"
+  },
+  "specification": "Fixed main effects; no model or seed selection against oracle truth",
+  "benchmark": "Mean expected profit effect before intermediate cashflow rounding, for realized promoted rows and versions; stored to cents",
+  "elapsed_seconds": 3.01
+}

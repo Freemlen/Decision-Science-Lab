@@ -1,129 +1,39 @@
-# Decision Memo: Retail Promotion Strategy
+# Decision memo: how to evaluate retail promotions
 
-## Business question
+**Scope:** fictional retailer, synthetic data only. Monetary values are per promoted store–product–week. This memo supersedes the [original memo](archive/decision_memo_original.md), retained unchanged.
 
-Should the retailer continue, stop, or target retail promotions?
+## Decision
 
-The goal is to evaluate whether promotions create incremental net profit, not only whether promoted products show higher observed sales or profit.
+Do not justify promotion expansion using a comparison of observed promoted and non-promoted profit. The next actionable step is a prespecified randomized experiment measuring incremental net profit. This analysis does not establish which real promotions should continue or stop.
 
----
+## Evidence available to an analyst
 
-## Executive summary
+For the reference dataset (seed 42), the unadjusted profit difference is **+1.81**. The ATT-oriented control-outcome regression is **−15.68**: fit expected profit without promotion on controls, then average observed profit minus that prediction over promoted rows. This is evidence conditional on measured confounders, overlap and the outcome model, not a proven effect.
 
-Naive analysis suggests that promotions are slightly profitable because promoted observations have higher observed net profit than non-promoted observations.
+The previous pooled regression coefficient is **−15.50**. It remains a historical comparison, but with heterogeneous effects it is not generally the average effect among promoted rows. A similar number does not make its estimand correct.
 
-However, this comparison is biased. Promotions were assigned non-randomly to stronger store-product-week observations: high-demand stores, popular products, seasonal periods, holidays, and strategic categories.
+Raw propensity weighting gives **−29.26** and the historical clipped sensitivity gives **−22.27**. Neither weighting result is suitable for a business point recommendation: after weighting, maximum absolute SMD is **0.524** (raw) / **0.270** (clipped), and control ESS is **472** / **1,710** out of **35,467**. Raw weights concentrate **43.51%** of mass in the top 1% of controls. These diagnostics can be computed without knowing causal truth; agreement on a negative sign is not independent validation.
 
-After adjusting for observed confounders, the estimated ATT-like effect of promotions among promoted rows becomes negative and close to the synthetic ground-truth benchmark.
+## Evidence available only to the simulator's evaluator
 
-The recommendation is to stop relying on blanket promotions and move toward targeted promotions in selected high-margin, low-discount contexts.
+The expected ATT for the realized treated rows and promotion versions is **−14.59**. The oracle averages expected profit differences before intermediate cashflow rounding, with the benchmark then stored to cents, rather than paired realized outcomes. The rounding discrepancy from expected rounded outcomes is at most about 0.025 per row. This benchmark is unavailable in a real promotion dataset.
 
----
+Five fixed independent seeds redraw the retail panel and outcomes. The regression ATT's errors range **−1.38 to +1.31**, with **MAE 0.91** and **RMSE 1.02**. The naive comparison has **MAE 22.01**; raw weighting has **MAE 19.93**, and clipped weighting **10.74**. Five runs do not establish confidence intervals, a general method ranking or real-world causal validity. The linear outcome model can still be misspecified.
 
-## Key findings
+The simulator bounds actual treatment probabilities between 0.03 and 0.88. The fitted logistic model misses the clipped shape, producing much more extreme odds. This helps explain poor balance and error; it is distinct from a structural lack of overlap in the simulator.
 
-| Estimate | Value | Interpretation |
-|---|---:|---|
-| Naive estimate | +1.81 | Promotions look slightly profitable |
-| Regression-adjusted estimate | -15.50 | Adjusted estimate is close to synthetic truth |
-| Propensity score weighted ATT | -22.27 | Corrects direction but is less stable |
-| True synthetic ATT among promoted rows | -14.59 | Ground-truth benchmark in synthetic data |
+## Segments are hypotheses, not a targeting policy
 
-The naive estimate has the wrong sign because promoted observations were already stronger before promotion assignment.
+The [oracle margin/discount table](methodology_upgrade/oracle_segments_seed42.csv) is descriptive. With fixed value bands, seed 42's high-margin (`>0.45`), low-discount (`<=0.12`) cell has 509 promoted rows and oracle mean expected effect **+13.62**. That number comes from hidden synthetic truth, not an estimated segment treatment effect. It cannot justify a deployment rule, causal ranking of discounts or a profitability promise.
 
----
+No action labels, targeting rules or trained policies are derived from `_true` columns. Realized discount and promotion type are parts of treatment; grouping on them is not baseline covariate adjustment. The plausible hypothesis to test is whether specified shallow-discount designs preserve more incremental profit in products with higher pre-treatment margin.
 
-## Why naive analysis is misleading
+## Proposed next experiment
 
-A simple promoted vs non-promoted comparison does not estimate the causal effect of promotions.
+1. Define eligible stores/products and promotion packages before assignment. Randomize no promotion versus specified packages; discount/type must be assigned, not retrospectively selected.
+2. Use a small number of prespecified blocks, such as category and prior demand/margin bands. Choose randomization units that limit spillovers and substitution; account for repeated store/product measurements and possible carryover.
+3. Measure net profit including discount and promotion costs over a prespecified horizon. Track stockouts and substitution as guardrails, rather than conditioning the primary estimate on post-treatment outcomes.
+4. Set sample size using independent-unit variation and an economically meaningful minimum effect. Predefine cluster-aware analysis, confidence intervals, stopping rules and limited segment comparisons.
+5. Decide on rollout only after the experiment. Its eligible-population or package-specific effect will be a new estimand, not automatically this historical-mix ATT.
 
-Promotions were more likely to be assigned to:
-
-- high-demand stores;
-- popular products;
-- seasonal periods;
-- holiday weeks;
-- strategic categories.
-
-These same factors also increase observed sales and profit. As a result, promoted observations can look better even when the true incremental effect of promotion is negative.
-
----
-
-## Causal interpretation
-
-Regression adjustment controls for observed pre-treatment confounders and recovers an estimate close to the true synthetic ATT.
-
-Propensity score weighting supports the same qualitative conclusion: the average promotion effect is negative. However, the weighted estimate is more extreme because of imperfect overlap and weight instability.
-
-The effective weighted control sample size is much smaller than the raw control group, so the propensity score estimate should be interpreted with caution.
-
-It is less reliable in magnitude because the weighted control group has low effective sample size and residual imbalance on key demand drivers.
-
----
-
-## Segment-level recommendation
-
-The average promotion is unprofitable, but some segments perform better than others.
-
-The strongest positive pocket is:
-
-| Segment | Recommendation |
-|---|---|
-| High-margin / low-discount promotions | Target / continue |
-| High-margin / medium-discount promotions | Test carefully |
-| Low-margin or high-discount promotions | Limit / stop |
-
-The key business implication is that the retailer should not continue blanket promotions. Instead, promotions should be targeted toward contexts where margin is high enough and discount depth is controlled.
-
----
-
-## Recommended business action
-
-1. Stop evaluating promotions using simple promoted vs non-promoted comparisons.
-2. Limit blanket promotions, especially high-discount and low-margin promotions.
-3. Target promotions toward high-margin, low-discount contexts.
-4. Use causal analysis or experimentation to validate promotion strategy before scaling.
-5. Design the next experiment as a blocked randomized test across stores and categories.
-
----
-
-## Next experiment design
-
-A better follow-up experiment should randomize promotion assignment within comparable blocks.
-
-Suggested blocking variables:
-
-- store size;
-- region;
-- product category;
-- brand tier;
-- baseline demand level;
-- margin segment.
-
-The experiment should measure incremental net profit as the primary outcome, not only sales or revenue.
-
----
-
-## Limitations
-
-This project uses synthetic data. The true incremental profit is known only because it was generated by the data-generating process.
-
-In real business data, true incremental profit would not be directly observed. It would need to be estimated through causal methods or measured through a randomized experiment.
-
-The MVP does not model:
-
-- stockouts;
-- inventory constraints;
-- substitution effects;
-- competitor pricing;
-- long-term customer behavior;
-- brand effects;
-- real customer-level heterogeneity.
-
----
-
-## Final recommendation
-
-The retailer should not continue blanket promotions based on naive observed profit comparisons.
-
-Promotions should be targeted to high-margin, low-discount contexts and validated through a blocked randomized experiment before broader rollout.
+No power, sample-size, ROI or rollout claim is supplied from these synthetic five-run results. This project excludes corporate data and production integration; it demonstrates measurement discipline and transparent uncertainty.
